@@ -22,8 +22,8 @@ def seed():
         FileService.ensure_storage_dirs()
 
         # Check if already seeded
-        if User.query.filter_by(username='Pradeep').first() or User.query.filter_by(username='admin').first():
-            print("Database already contains admin user. Skipping seed.")
+        if User.query.filter_by(username='master').first():
+            print("Database already contains master user. Skipping seed.")
             return
 
         print("Creating initial database tables...")
@@ -31,34 +31,16 @@ def seed():
 
         # 1. Create Users
         print("Creating users...")
-        super_admin = User(
-            username='admin',
-            email='admin@docuvault.io',
-            full_name='System Administrator',
-            role='admin',
-            avatar_color='#4f46e5'
-        )
-        super_admin.set_password('AdminPass2026!')
-
-        admin = User(
-            username='Pradeep',
-            email='pradeep@docuvault.io',
-            full_name='Pradeep',
+        master = User(
+            username='master',
+            email='master@docuvault.io',
+            full_name='Master Administrator',
             role='admin',
             avatar_color='#6366f1'
         )
-        admin.set_password('Pradeep123')
+        master.set_password('naster123')
 
-        manager = User(
-            username='sarah',
-            email='sarah.jenkins@docuvault.io',
-            full_name='Sarah Jenkins',
-            role='manager',
-            avatar_color='#10b981'
-        )
-        manager.set_password('sarah123')
-
-        db.session.add_all([super_admin, admin, manager])
+        db.session.add(master)
         db.session.commit()
 
         # 2. Create Tags
@@ -76,17 +58,17 @@ def seed():
 
         # 3. Create Folders
         print("Creating folder hierarchy...")
-        f_hr = Folder(name='Company Policies & HR', description='Employee handbooks, benefits, and compliance', color='#6366f1', user_id=admin.id)
-        f_fin = Folder(name='Financial Audits 2026', description='Quarterly balance sheets, P&L statements, tax filings', color='#10b981', user_id=admin.id)
-        f_tech = Folder(name='Engineering & Architecture', description='System designs, API specs, and technical documentation', color='#8b5cf6', user_id=admin.id)
-        f_prod = Folder(name='Product Roadmaps', description='Feature backlogs, UI mockups, and customer feedback', color='#f59e0b', user_id=manager.id)
+        f_hr = Folder(name='Company Policies & HR', description='Employee handbooks, benefits, and compliance', color='#6366f1', user_id=master.id)
+        f_fin = Folder(name='Financial Audits 2026', description='Quarterly balance sheets, P&L statements, tax filings', color='#10b981', user_id=master.id)
+        f_tech = Folder(name='Engineering & Architecture', description='System designs, API specs, and technical documentation', color='#8b5cf6', user_id=master.id)
+        f_prod = Folder(name='Product Roadmaps', description='Feature backlogs, UI mockups, and customer feedback', color='#f59e0b', user_id=master.id)
 
         db.session.add_all([f_hr, f_fin, f_tech, f_prod])
         db.session.commit()
 
         # Subfolders
-        f_tax = Folder(name='Q3 Tax Returns', description='Subfolder for Q3 records', color='#10b981', parent_id=f_fin.id, user_id=admin.id)
-        f_api = Folder(name='REST API Specs', description='API endpoints and schema definitions', color='#8b5cf6', parent_id=f_tech.id, user_id=admin.id)
+        f_tax = Folder(name='Q3 Tax Returns', description='Subfolder for Q3 records', color='#10b981', parent_id=f_fin.id, user_id=master.id)
+        f_api = Folder(name='REST API Specs', description='API endpoints and schema definitions', color='#8b5cf6', parent_id=f_tech.id, user_id=master.id)
         db.session.add_all([f_tax, f_api])
         db.session.commit()
 
@@ -131,7 +113,7 @@ def process_document(file_stream, user_id):
                 'filename': 'financial_summary_q3.csv',
                 'category': 'spreadsheet',
                 'folder': f_fin,
-                'user': admin,
+                'user': master,
                 'tags': [tags['financial'], tags['q3-report'], tags['confidential']],
                 'is_starred': True,
                 'content': """Quarter,Region,Revenue (USD),Operating Expenses,Net Profit,YoY Growth
@@ -151,7 +133,7 @@ Q3 2026,Asia-Pacific,8900000,4700000,4200000,+31.2%
                 'filename': 'employee_handbook_2026.txt',
                 'category': 'text',
                 'folder': f_hr,
-                'user': admin,
+                'user': master,
                 'tags': [tags['guidelines'], tags['verified']],
                 'is_starred': False,
                 'content': """DOCUVAULT CORP - EMPLOYEE CODE OF CONDUCT (2026)
@@ -171,7 +153,7 @@ Section 2: Version Control Protocols
                 'filename': 'storage_service.py',
                 'category': 'code',
                 'folder': f_api,
-                'user': admin,
+                'user': master,
                 'tags': [tags['architecture']],
                 'is_starred': False,
                 'content': """# Core Storage & Hashing Engine
@@ -200,7 +182,7 @@ class StorageService:
                 'filename': 'api_gateway_config.json',
                 'category': 'code',
                 'folder': f_api,
-                'user': manager,
+                'user': master,
                 'tags': [tags['architecture']],
                 'is_starred': False,
                 'content': """{
@@ -223,7 +205,7 @@ class StorageService:
                 'filename': 'docuvault_logo_vector.svg',
                 'category': 'image',
                 'folder': None, # Root
-                'user': admin,
+                'user': master,
                 'tags': [tags['guidelines']],
                 'is_starred': True,
                 'content': """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
@@ -246,7 +228,7 @@ class StorageService:
 
         for item in sample_files_data:
             filename = item['filename']
-            file_path = Config.UPLOAD_DIR / f"{admin.id}_{filename}"
+            file_path = Config.UPLOAD_DIR / f"{master.id}_{filename}"
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(item['content'])
 
@@ -314,7 +296,7 @@ class StorageService:
                     file_size=v2_size,
                     checksum_sha256=v2_hash,
                     change_summary='Appended Q4 2026 Global Aggregate Forecast projections',
-                    uploaded_by_id=admin.id
+                    uploaded_by_id=master.id
                 )
                 db.session.add(v2)
                 doc.current_version = 2
@@ -326,7 +308,7 @@ class StorageService:
             # Add sample comment
             comment = Comment(
                 document_id=doc.id,
-                user_id=admin.id,
+                user_id=master.id,
                 content=f"Document '{doc.title}' has been reviewed and verified for integrity."
             )
             db.session.add(comment)
@@ -346,20 +328,19 @@ class StorageService:
         if first_doc:
             share = DocumentShare(
                 document_id=first_doc.id,
-                created_by_id=admin.id,
+                created_by_id=master.id,
                 expires_at=datetime.now(timezone.utc) + timedelta(days=30),
                 allow_download=True,
                 access_count=5
             )
             db.session.add(share)
 
-        admin.storage_used = total_storage
+        master.storage_used = total_storage
         db.session.commit()
 
         print("Data seeding completed successfully!")
-        print("Demo Credentials:")
-        print("  Admin:   username='Pradeep', password='Pradeep123'")
-        print("  Manager: username='sarah',   password='sarah123'")
+        print("Master Credentials:")
+        print("  Admin: username='master', password='naster123'")
 
 if __name__ == '__main__':
     seed()

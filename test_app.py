@@ -9,7 +9,7 @@ class DocuVaultTestCase(unittest.TestCase):
         self.app.config['TESTING'] = True
         self.client = self.app.test_client()
 
-    def login(self, username='Pradeep', password='Pradeep123'):
+    def login(self, username='master', password='naster123'):
         return self.client.post('/auth/login', data={
             'identifier': username,
             'password': password
@@ -18,7 +18,7 @@ class DocuVaultTestCase(unittest.TestCase):
     def test_login_and_dashboard(self):
         response = self.login()
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Pradeep', response.data)
+        self.assertIn(b'master', response.data)
         self.assertIn(b'Storage Distribution', response.data)
 
     def test_explorer_and_files(self):
