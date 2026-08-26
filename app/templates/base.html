@@ -218,6 +218,13 @@
         </div>
       </div>
     </header>
+    {% else %}
+    <!-- Floating Theme Toggle for Unauthenticated Pages -->
+    <div style="position: fixed; top: 1.25rem; right: 1.5rem; z-index: 100;">
+      <button type="button" class="icon-btn glass" id="themeToggleBtn" title="Toggle Theme" style="box-shadow: var(--shadow-md); width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+        <i data-lucide="moon" id="themeIcon" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
     {% endif %}
 
     <!-- Flash Messages -->

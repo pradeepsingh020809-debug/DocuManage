@@ -31,9 +31,10 @@ function initTheme() {
 }
 
 function updateThemeIcon(theme) {
-  const icon = document.getElementById('themeIcon');
-  if (icon) {
-    icon.setAttribute('data-lucide', theme === 'dark' ? 'sun' : 'moon');
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) {
+    btn.innerHTML = `<i data-lucide="${theme === 'dark' ? 'sun' : 'moon'}" id="themeIcon" style="width: 18px; height: 18px;"></i>`;
+    btn.setAttribute('title', `Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`);
     if (window.lucide) {
       lucide.createIcons();
     }
