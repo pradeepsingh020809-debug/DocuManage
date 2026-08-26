@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+.gitignore
+.env
+.venv/
+env/
+venv/
+instance/*.db
+storage/uploads/*
+!storage/uploads/.gitkeep
+storage/thumbnails/*
+!storage/thumbnails/.gitkeep
+storage/versions/*
+!storage/versions/.gitkeep
