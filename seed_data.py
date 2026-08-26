@@ -22,7 +22,7 @@ def seed():
         FileService.ensure_storage_dirs()
 
         # Check if already seeded
-        if User.query.filter_by(username='admin').first():
+        if User.query.filter_by(username='Pradeep').first() or User.query.filter_by(username='admin').first():
             print("Database already contains admin user. Skipping seed.")
             return
 
