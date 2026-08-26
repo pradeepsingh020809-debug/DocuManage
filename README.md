@@ -1,8 +1,20 @@
 # 📂 DocuVault - Enterprise Document Management System (DMS)
 
-**DocuVault** is a full-featured, secure, and modern Document Management System web application built in **Python (Flask)** with a responsive **Glassmorphism UI**, full-text search, in-browser multi-format previewing, document version control, and access control.
+> 🚀 **Live Production Web Application**: **[https://documanage.onrender.com](https://documanage.onrender.com)**
+
+**DocuVault** is a full-featured, secure, and modern Document Management System web application built in **Python (Flask)** with a responsive **Glassmorphism UI**, interactive red/blue live background, full-text search, in-browser multi-format previewing, document version control, and access control.
 
 ---
+
+## 🌐 Live Web App & Demo Logins
+
+Visit the live hosted app on Render: **[https://documanage.onrender.com](https://documanage.onrender.com)**
+
+### 🔑 Active Credentials:
+| Role | Username | Password |
+|---|---|---|
+| **Admin** | `admin` | `admin123` |
+| **Master Admin** | `master` | `admin123` |
 
 ## ✨ Key Features
 
