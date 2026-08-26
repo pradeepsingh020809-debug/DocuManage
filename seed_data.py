@@ -40,7 +40,16 @@ def seed():
         )
         master.set_password('naster123')
 
-        db.session.add(master)
+        admin = User(
+            username='admin',
+            email='admin@docuvault.io',
+            full_name='System Administrator',
+            role='admin',
+            avatar_color='#4f46e5'
+        )
+        admin.set_password('naster123')
+
+        db.session.add_all([master, admin])
         db.session.commit()
 
         # 2. Create Tags

@@ -17,6 +17,7 @@ if __name__ == '__main__':
     print(f">> DocuVault - Document Management System is running!")
     print(f"[*] Local Web Interface: http://127.0.0.1:{port}")
     print(f"[*] Master Admin: username='master', password='naster123'")
+    print(f"[*] System Admin: username='admin',  password='naster123'")
     print(f"========================================================\n")
 
     app.run(host='0.0.0.0', port=port, debug=True)
