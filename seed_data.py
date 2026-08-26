@@ -31,6 +31,15 @@ def seed():
 
         # 1. Create Users
         print("Creating users...")
+        super_admin = User(
+            username='admin',
+            email='admin@docuvault.io',
+            full_name='System Administrator',
+            role='admin',
+            avatar_color='#4f46e5'
+        )
+        super_admin.set_password('AdminPass2026!')
+
         admin = User(
             username='Pradeep',
             email='pradeep@docuvault.io',
@@ -49,7 +58,7 @@ def seed():
         )
         manager.set_password('sarah123')
 
-        db.session.add_all([admin, manager])
+        db.session.add_all([super_admin, admin, manager])
         db.session.commit()
 
         # 2. Create Tags
