@@ -506,3 +506,119 @@ h1, h2, h3, h4, h5, h6 {
 .text-muted { color: var(--text-muted); }
 .text-sm { font-size: 0.85rem; }
 .text-xs { font-size: 0.75rem; }
+
+/* ==========================================================================
+   Live Background & Glowing Mesh Animations
+   ========================================================================== */
+.live-bg-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--bg-app);
+  transition: background-color 0.4s ease;
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.orb-primary {
+  width: 650px;
+  height: 650px;
+  top: -150px;
+  left: -150px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.28) 0%, rgba(99, 102, 241, 0) 70%);
+  filter: blur(90px);
+  animation: floatOrbPrimary 22s infinite alternate ease-in-out;
+}
+
+.orb-accent {
+  width: 550px;
+  height: 550px;
+  bottom: -100px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.24) 0%, rgba(168, 85, 247, 0) 70%);
+  filter: blur(100px);
+  animation: floatOrbAccent 26s infinite alternate ease-in-out;
+}
+
+.orb-cyan {
+  width: 500px;
+  height: 500px;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.2) 0%, rgba(6, 182, 212, 0) 70%);
+  filter: blur(85px);
+  animation: floatOrbCyan 24s infinite alternate ease-in-out;
+}
+
+[data-theme="dark"] .orb-primary {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.38) 0%, rgba(99, 102, 241, 0) 70%);
+  filter: blur(110px);
+}
+
+[data-theme="dark"] .orb-accent {
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.32) 0%, rgba(168, 85, 247, 0) 70%);
+  filter: blur(115px);
+}
+
+[data-theme="dark"] .orb-cyan {
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.28) 0%, rgba(6, 182, 212, 0) 70%);
+  filter: blur(100px);
+}
+
+#liveParticlesCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+@keyframes floatOrbPrimary {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(120px, 80px) scale(1.15);
+  }
+  100% {
+    transform: translate(40px, 160px) scale(0.95);
+  }
+}
+
+@keyframes floatOrbAccent {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-140px, -100px) scale(1.2);
+  }
+  100% {
+    transform: translate(-60px, -180px) scale(0.9);
+  }
+}
+
+@keyframes floatOrbCyan {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-30%, -65%) scale(1.25);
+  }
+  100% {
+    transform: translate(-65%, -35%) scale(0.85);
+  }
+}
+

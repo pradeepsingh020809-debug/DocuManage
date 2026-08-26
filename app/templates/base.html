@@ -19,6 +19,14 @@
 </head>
 <body>
 
+<!-- Animated Live Background -->
+<div id="liveBgContainer" class="live-bg-wrapper" aria-hidden="true">
+  <div class="glow-orb orb-primary"></div>
+  <div class="glow-orb orb-accent"></div>
+  <div class="glow-orb orb-cyan"></div>
+  <canvas id="liveParticlesCanvas"></canvas>
+</div>
+
 <div class="app-layout">
   {% if current_user %}
   <!-- Sidebar Navigation -->
