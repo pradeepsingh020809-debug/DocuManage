@@ -238,13 +238,13 @@ function initLiveBackground() {
       ctx.translate(this.x, this.y);
       ctx.rotate(this.angle);
 
-      // Crimson / Ruby Red colors
+      // Electric Royal Blue / Sapphire Cyan colors
       const strokeColor = isDark
-        ? `rgba(248, 113, 113, ${this.alpha * 1.2})`
-        : `rgba(239, 68, 68, ${this.alpha * 0.85})`;
+        ? `rgba(96, 165, 250, ${this.alpha * 1.3})`
+        : `rgba(37, 99, 235, ${this.alpha * 0.85})`;
       const fillColor = isDark
-        ? `rgba(225, 29, 72, ${this.alpha * 0.25})`
-        : `rgba(254, 226, 226, ${this.alpha * 0.3})`;
+        ? `rgba(59, 130, 246, ${this.alpha * 0.22})`
+        : `rgba(219, 234, 254, ${this.alpha * 0.35})`;
 
       ctx.strokeStyle = strokeColor;
       ctx.fillStyle = fillColor;
