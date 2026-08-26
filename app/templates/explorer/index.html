@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if current_folder %}{{ current_folder.name }} - DocuVault{% else %}All Documents - DocuVault{% endif %}
+{% endblock %}
+
+{% block content %}
+<div>
+
+  <!-- Breadcrumbs Navigation -->
+  <div class="breadcrumb-nav">
+    <a href="{{ url_for('folders.explorer') }}" class="breadcrumb-item {% if not current_folder %}active{% endif %}">
+      <i data-lucide="home" style="width: 16px; height: 16px;"></i>
+      <span>Root</span>
+    </a>
+
+    {% for crumb in breadcrumbs %}
+      <span class="breadcrumb-separator">/</span>
+      {% if loop.last %}
+        <span class="breadcrumb-item active">{{ crumb.name }}</span>
+      {% else %}
+        <a href="{{ url_for('folders.explorer', folder_id=crumb.id) }}" class="breadcrumb-item">{{ crumb.name }}</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Explorer Toolbar -->
+  <div class="explorer-toolbar">
+    <!-- Left: Filter Chips -->
+    <div class="toolbar-left">
+      <div class="filter-chips">
+        <a href="{{ url_for('folders.explorer', folder_id=current_folder.id if current_folder else None, category='all', view=view_mode, sort=sort_by) }}" 
+           class="filter-chip {% if selected_category == 'all' %}active{% endif %}">
+          All Files
+        </a>
+        <a href="{{ url_for('folders.explorer', folder_id=current_folder.id if current_folder else None, category='pdf', view=view_mode, sort=sort_by) }}" 
+           class="filter-chip {% if selected_category == 'pdf' %}active{% endif %}">
+          PDFs
+        </a>
+        <a href="{{ url_for('folders.explorer', folder_id=current_folder.id if current_folder else None, category='document', view=view_mode, sort=sort_by) }}" 
+           class="filter-chip {% if selected_category == 'document' %}active{% endif %}">
+          Documents
+        </a>
+        <a href="{{ url_for('folders.explorer', folder_id=current_folder.id if current_folder else None, category='spreadsheet', view=view_mode, sort=sort_by) }}" 
+           class="filter-chip {% if selected_category == 'spreadsheet' %}active{% endif %}">
+          Spreadsheets
+        </a>
+        <a href="{{ url_for('folders.explorer', folder_id=current_folder.id if current_folder else None, category='image', view=view_mode, sort=sort_by) }}" 
+           class="filter-chip {% if selected_category == 'image' %}active{% endif %}">
+          Images
+        </a>
+        <a href="{{ url_for('folders.explorer', folder_id=current_folder.id if current_folder else None, category='code', view=view_mode, sort=sort_by) }}" 
+           class="filter-chip {% if selected_category == 'code' %}active{% endif %}">
+          Code
+        </a>
+      </div>
+    </div>
+
+    <!-- Right: Sorting, View Switcher, Actions -->
+    <div class="toolbar-right">
+      <!-- Sort Dropdown -->
+      <div class="dropdown">
+        <button type="button" class="btn btn-secondary btn-sm" data-dropdown-toggle>
+          <i data-lucide="arrow-up-down" style="width: 14px; height: 14px;"></i>
+          <span>Sort</span>
+        </button>
+        <div class="dropdown-menu">
+          <a href="{{ url_for('folders.explorer', folder_id=current_folder.id if current_folder else None, category=selected_category, view=view_mode, sort='date_desc') }}" class="dropdown-item">Newest First</a>
+          <a href="{{ url_for('folders.explorer', folder_id=current_folder.id if current_folder else None, category=selected_category, view=view_mode, sort='date_asc') }}" class="dropdown-item">Oldest First</a>
+          <a href="{{ url_for('folders.explorer', folder_id=current_folder.id if current_folder else None, category=selected_category, view=view_mode, sort='name_asc') }}" class="dropdown-item">Name (A-Z)</a>
+          <a href="{{ url_for('folders.explorer', folder_id=current_folder.id if current_folder else None, category=selected_category, view=view_mode, sort='size_desc') }}" class="dropdown-item">Size (Largest)</a>
+        </div>
+      </div>
+
+      <!-- View Switcher (Grid / List) -->
+      <div class="view-mode-toggle">
+        <a href="{{ url_for('folders.explorer', folder_id=current_folder.id if current_folder else None, category=selected_category, sort=sort_by, view='grid') }}" 
+           class="view-btn {% if view_mode == 'grid' %}active{% endif %}" title="Grid View">
+          <i data-lucide="grid" style="width: 16px; height: 16px;"></i>
+        </a>
+        <a href="{{ url_for('folders.explorer', folder_id=current_folder.id if current_folder else None, category=selected_category, sort=sort_by, view='list') }}" 
+           class="view-btn {% if view_mode == 'list' %}active{% endif %}" title="List View">
+          <i data-lucide="list" style="width: 16px; height: 16px;"></i>
+        </a>
+      </div>
+
+      <!-- Primary Action Buttons -->
+      <button type="button" class="btn btn-secondary btn-sm" data-open-modal="createFolderModal">
+        <i data-lucide="folder-plus" style="width: 15px; height: 15px;"></i>
+        <span>New Folder</span>
+      </button>
+
+      <button type="button" class="btn btn-primary btn-sm" data-open-modal="uploadModal">
+        <i data-lucide="upload" style="width: 15px; height: 15px;"></i>
+        <span>Upload</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Subfolders Section -->
+  {% if subfolders %}
+  <div class="section-title-wrapper">
+    <span class="section-title">Folders ({{ subfolders|length }})</span>
+  </div>
+
+  <div class="folder-grid">
+    {% for f in subfolders %}
+    <div class="folder-card">
+      <a href="{{ url_for('folders.explorer', folder_id=f.id) }}" style="display: flex; align-items: center; gap: 0.85rem; flex: 1; text-decoration: none; color: inherit; min-width: 0;">
+        <div class="folder-icon-wrapper" style="background: {{ f.color }}18; color: {{ f.color }};">
+          <i data-lucide="folder" style="width: 24px; height: 24px;"></i>
+        </div>
+        <div class="folder-info">
+          <div class="folder-name">{{ f.name }}</div>
+          <div class="folder-meta">{{ f.get_item_count() }} items • {{ format_size(f.get_total_size()) }}</div>
+        </div>
+      </a>
+
+      <!-- Folder Dropdown Actions -->
+      <div class="dropdown">
+        <button type="button" class="icon-btn" style="width: 28px; height: 28px; border:none; background:transparent;" data-dropdown-toggle>
+          <i data-lucide="more-vertical" style="width: 14px; height: 14px;"></i>
+        </button>
+        <div class="dropdown-menu">
+          <form action="{{ url_for('folders.delete_folder', folder_id=f.id) }}" method="POST" onsubmit="return confirm('Move folder and all contained documents to Trash?');">
+            <button type="submit" class="dropdown-item text-danger">
+              <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+              <span>Move to Trash</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Documents Section -->
+  <div class="section-title-wrapper">
+    <span class="section-title">Documents ({{ documents|length }})</span>
+  </div>
+
+  {% if documents %}
+    {% if view_mode == 'grid' %}
+      <!-- 1. GRID VIEW -->
+      <div class="document-grid">
+        {% for doc in documents %}
+        <div class="doc-card" id="doc-card-{{ doc.id }}">
+          <!-- Select Checkbox -->
+          <input type="checkbox" class="doc-checkbox doc-select-checkbox" value="{{ doc.id }}">
+
+          <!-- Star Favorite Button -->
+          <button type="button" class="doc-star-btn {% if doc.is_starred %}starred{% endif %}" data-doc-id="{{ doc.id }}" title="Star Document">
+            <i data-lucide="star" style="width: 16px; height: 16px; {% if doc.is_starred %}fill: #f59e0b; color: #f59e0b;{% endif %}"></i>
+          </button>
+
+          <!-- Preview Area -->
+          <div class="doc-card-preview" data-preview-doc-id="{{ doc.id }}">
+            <i data-lucide="{{ file_icon(doc.file_extension, doc.category) }}" class="preview-icon" style="color: {{ category_color(doc.category) }};"></i>
+          </div>
+
+          <!-- Body Info -->
+          <div class="doc-card-body">
+            <a href="{{ url_for('documents.details', doc_id=doc.id) }}" class="doc-card-title" title="{{ doc.title }}">{{ doc.title }}</a>
+            
+            <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
+              <span class="badge badge-secondary" style="font-size: 0.7rem;">v{{ doc.current_version }}</span>
+              <span class="badge badge-primary" style="font-size: 0.7rem;">{{ doc.category }}</span>
+              {% for tag in doc.tags[:2] %}
+                <span class="badge" style="background: rgba(99,102,241,0.1); color: var(--primary); font-size: 0.68rem;">#{{ tag.name }}</span>
+              {% endfor %}
+            </div>
+
+            <div class="doc-card-footer">
+              <span>{{ doc.formatted_size }}</span>
+              
+              <!-- Quick Action Dropdown -->
+              <div class="dropdown">
+                <button type="button" class="icon-btn" style="width: 24px; height: 24px; border:none; background:transparent;" data-dropdown-toggle>
+                  <i data-lucide="more-horizontal" style="width: 14px; height: 14px;"></i>
+                </button>
+                <div class="dropdown-menu">
+                  <a href="#" class="dropdown-item" data-preview-doc-id="{{ doc.id }}">
+                    <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
+                    <span>Quick Preview</span>
+                  </a>
+                  <a href="{{ url_for('documents.details', doc_id=doc.id) }}" class="dropdown-item">
+                    <i data-lucide="info" style="width: 14px; height: 14px;"></i>
+                    <span>Document Details</span>
+                  </a>
+                  <a href="{{ url_for('documents.download', doc_id=doc.id) }}" class="dropdown-item">
+                    <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+                    <span>Download</span>
+                  </a>
+                  <form action="{{ url_for('documents.delete', doc_id=doc.id) }}" method="POST">
+                    <button type="submit" class="dropdown-item text-danger">
+                      <i data-lucide="trash" style="width: 14px; height: 14px;"></i>
+                      <span>Move to Trash</span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <!-- 2. LIST / TABLE VIEW -->
+      <div class="doc-table-container">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th style="width: 40px;">
+                <input type="checkbox" id="selectAllDocs" style="accent-color: var(--primary); cursor: pointer;">
+              </th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Version</th>
+              <th>Size</th>
+              <th>Modified</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for doc in documents %}
+            <tr>
+              <td>
+                <input type="checkbox" class="doc-select-checkbox" value="{{ doc.id }}" style="accent-color: var(--primary); cursor: pointer;">
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <button type="button" class="doc-star-btn {% if doc.is_starred %}starred{% endif %}" data-doc-id="{{ doc.id }}" style="position: static; width: 26px; height: 26px;">
+                    <i data-lucide="star" style="width: 14px; height: 14px; {% if doc.is_starred %}fill: #f59e0b; color: #f59e0b;{% endif %}"></i>
+                  </button>
+                  <div style="cursor: pointer;" data-preview-doc-id="{{ doc.id }}">
+                    <i data-lucide="{{ file_icon(doc.file_extension, doc.category) }}" style="color: {{ category_color(doc.category) }}; width: 20px; height: 20px;"></i>
+                  </div>
+                  <div>
+                    <a href="{{ url_for('documents.details', doc_id=doc.id) }}" style="font-weight: 600; color: var(--text-primary); text-decoration: none;">
+                      {{ doc.title }}
+                    </a>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ doc.filename }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-secondary">{{ doc.category }}</span>
+              </td>
+              <td>
+                <span class="badge badge-primary">v{{ doc.current_version }}</span>
+              </td>
+              <td style="color: var(--text-secondary); font-size: 0.85rem;">{{ doc.formatted_size }}</td>
+              <td style="color: var(--text-muted); font-size: 0.85rem;">{{ time_ago(doc.updated_at) }}</td>
+              <td style="text-align: right;">
+                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.4rem;">
+                  <button type="button" class="icon-btn btn-sm" data-preview-doc-id="{{ doc.id }}" title="Preview">
+                    <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
+                  </button>
+                  <a href="{{ url_for('documents.download', doc_id=doc.id) }}" class="icon-btn btn-sm" title="Download">
+                    <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+                  </a>
+                  <a href="{{ url_for('documents.details', doc_id=doc.id) }}" class="icon-btn btn-sm" title="Details">
+                    <i data-lucide="info" style="width: 14px; height: 14px;"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <!-- Empty State -->
+    <div class="glass-card" style="text-align: center; padding: 4rem 2rem; margin-top: 1rem;">
+      <div style="width: 64px; height: 64px; border-radius: var(--radius-full); background: var(--bg-subtle); display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); margin-bottom: 1rem;">
+        <i data-lucide="folder-open" style="width: 32px; height: 32px;"></i>
+      </div>
+      <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.4rem;">No documents in this folder</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 400px; margin: 0 auto 1.5rem;">
+        Upload new files or create folders to organize your workspace.
+      </p>
+      <button type="button" class="btn btn-primary" data-open-modal="uploadModal">
+        <i data-lucide="upload" style="width: 16px; height: 16px;"></i>
+        <span>Upload Your First File</span>
+      </button>
+    </div>
+  {% endif %}
+
+  <!-- Floating Batch Actions Bar -->
+  <div id="batchActionsBar" class="batch-actions-bar">
+    <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">
+      <span id="batchSelectedCount">0</span> selected
+    </span>
+    <div style="height: 18px; width: 1px; background: var(--border-subtle);"></div>
+    <button type="button" id="batchDownloadBtn" class="btn btn-secondary btn-sm">
+      <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+      <span>Download ZIP</span>
+    </button>
+    <button type="button" id="batchMoveBtn" class="btn btn-secondary btn-sm">
+      <i data-lucide="folder-input" style="width: 14px; height: 14px;"></i>
+      <span>Move to...</span>
+    </button>
+    <button type="button" id="batchDeleteBtn" class="btn btn-danger btn-sm">
+      <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+      <span>Delete</span>
+    </button>
+    <button type="button" id="clearSelectionBtn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; text-decoration: underline;">
+      Clear
+    </button>
+  </div>
+
+</div>
+{% endblock %}

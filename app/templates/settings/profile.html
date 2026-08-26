@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings - DocuVault{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: 2rem;">
+
+  <!-- Header -->
+  <div>
+    <h1 style="font-size: 1.6rem; font-weight: 800;">Account & Security Settings</h1>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Manage your user profile, credentials, and view your storage usage.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.5rem; align-items: flex-start;">
+    
+    <!-- Left Column: Profile Card & Storage Quota -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+      
+      <!-- Profile Card -->
+      <div class="glass-card" style="padding: 2rem; text-align: center;">
+        <div style="width: 72px; height: 72px; border-radius: var(--radius-full); background: {{ user.avatar_color }}; color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+          {{ user.initials }}
+        </div>
+        <h2 style="font-size: 1.3rem; font-weight: 700;">{{ user.full_name }}</h2>
+        <p style="color: var(--text-muted); font-size: 0.88rem;">@{{ user.username }} • {{ user.email }}</p>
+        <div style="margin-top: 0.75rem;">
+          <span class="badge badge-primary" style="font-size: 0.8rem; padding: 0.35rem 0.85rem;">Role: {{ user.role|upper }}</span>
+        </div>
+      </div>
+
+      <!-- Storage Breakdown -->
+      <div class="glass-card" style="padding: 1.75rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+          <i data-lucide="hard-drive" style="color: var(--primary);"></i>
+          Storage Quota Status
+        </h3>
+
+        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.4rem;">
+          <span style="color: var(--text-secondary);">Used {{ format_size(user.storage_used) }}</span>
+          <span style="font-weight: 700; color: var(--primary);">{{ user.storage_percentage }}% of {{ format_size(user.storage_quota) }}</span>
+        </div>
+
+        <div class="progress-bar-bg" style="height: 10px;">
+          <div class="progress-bar-fill" style="width: {{ user.storage_percentage }}%;"></div>
+        </div>
+
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.75rem;">
+          Your current quota allows storing up to {{ format_size(user.storage_quota) }} of active documents and version history files.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Profile Edit & Password Change Forms -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+      
+      <!-- Edit Profile Form -->
+      <div class="glass-card" style="padding: 1.75rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="user-check" style="color: var(--primary);"></i>
+          Personal Information
+        </h3>
+
+        <form action="{{ url_for('auth.profile') }}" method="POST">
+          <input type="hidden" name="action" value="update_info">
+          
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" value="{{ user.full_name }}" class="form-input" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Avatar Color Accent</label>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+              <input type="color" name="avatar_color" value="{{ user.avatar_color }}" style="width: 48px; height: 40px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); cursor: pointer; padding: 2px;">
+              <span style="font-size: 0.85rem; color: var(--text-muted);">Pick your personal profile color identifier</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i data-lucide="check"></i>
+            <span>Update Profile</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Change Password Form -->
+      <div class="glass-card" style="padding: 1.75rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="shield-check" style="color: var(--primary);"></i>
+          Change Password
+        </h3>
+
+        <form action="{{ url_for('auth.profile') }}" method="POST">
+          <input type="hidden" name="action" value="change_password">
+
+          <div class="form-group">
+            <label class="form-label">Current Password</label>
+            <input type="password" name="current_password" class="form-input" placeholder="••••••••" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label">New Password</label>
+              <input type="password" name="new_password" class="form-input" placeholder="••••••••" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm New Password</label>
+              <input type="password" name="confirm_new_password" class="form-input" placeholder="••••••••" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-secondary btn-sm">
+            <i data-lucide="key"></i>
+            <span>Change Password</span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

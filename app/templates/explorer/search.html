@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Search Documents - DocuVault{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+  <!-- Search Header & Filters -->
+  <div class="glass-card" style="padding: 1.75rem;">
+    <h1 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+      <i data-lucide="search" style="color: var(--primary);"></i>
+      Advanced Document Search
+    </h1>
+
+    <form action="{{ url_for('search.search_view') }}" method="GET" style="display: flex; flex-direction: column; gap: 1rem;">
+      <!-- Search Input -->
+      <div style="display: flex; gap: 0.75rem;">
+        <input type="text" name="q" value="{{ query }}" class="form-input" placeholder="Search keywords in title, description, content or tags..." style="flex: 1; font-size: 1rem; padding: 0.75rem 1rem;">
+        <button type="submit" class="btn btn-primary" style="padding: 0 1.5rem;">
+          <i data-lucide="search"></i>
+          <span>Search</span>
+        </button>
+      </div>
+
+      <!-- Advanced Filter Chips/Dropdowns -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding-top: 0.5rem; border-top: 1px solid var(--border-subtle);">
+        <div>
+          <label class="form-label" style="font-size: 0.8rem;">Category</label>
+          <select name="category" class="form-select">
+            <option value="all" {% if category == 'all' %}selected{% endif %}>All Categories</option>
+            <option value="pdf" {% if category == 'pdf' %}selected{% endif %}>PDF Files</option>
+            <option value="document" {% if category == 'document' %}selected{% endif %}>Documents</option>
+            <option value="spreadsheet" {% if category == 'spreadsheet' %}selected{% endif %}>Spreadsheets</option>
+            <option value="image" {% if category == 'image' %}selected{% endif %}>Images</option>
+            <option value="code" {% if category == 'code' %}selected{% endif %}>Code & Config</option>
+            <option value="text" {% if category == 'text' %}selected{% endif %}>Text Files</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size: 0.8rem;">Folder</label>
+          <select name="folder_id" class="form-select">
+            <option value="">Any Folder</option>
+            {% for f in all_folders %}
+            <option value="{{ f.id }}" {% if selected_folder == f.id %}selected{% endif %}>📁 {{ f.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size: 0.8rem;">Tag</label>
+          <select name="tag_id" class="form-select">
+            <option value="">Any Tag</option>
+            {% for t in all_tags %}
+            <option value="{{ t.id }}" {% if selected_tag == t.id %}selected{% endif %}>#{{ t.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Search Results Count -->
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="font-size: 0.95rem; font-weight: 600; color: var(--text-secondary);">
+      Found <span style="color: var(--primary); font-weight: 800;">{{ results|length }}</span> matching document(s)
+    </div>
+  </div>
+
+  <!-- Search Results List -->
+  {% if results %}
+  <div style="display: flex; flex-direction: column; gap: 1rem;">
+    {% for doc in results %}
+    <div class="glass-card" style="padding: 1.25rem; display: flex; align-items: flex-start; gap: 1.25rem; transition: var(--transition);">
+      
+      <!-- Icon Preview -->
+      <div style="width: 48px; height: 48px; border-radius: var(--radius-md); background: var(--bg-subtle); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;" data-preview-doc-id="{{ doc.id }}">
+        <i data-lucide="{{ file_icon(doc.file_extension, doc.category) }}" style="color: {{ category_color(doc.category) }}; width: 24px; height: 24px;"></i>
+      </div>
+
+      <!-- Main Info -->
+      <div style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+          <a href="{{ url_for('documents.details', doc_id=doc.id) }}" style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); text-decoration: none;">
+            {{ doc.title }}
+          </a>
+          <span class="badge badge-secondary">v{{ doc.current_version }}</span>
+          <span class="badge badge-primary">{{ doc.category }}</span>
+          {% for tag in doc.tags %}
+          <span class="badge" style="background: rgba(99,102,241,0.1); color: var(--primary); font-size: 0.7rem;">#{{ tag.name }}</span>
+          {% endfor %}
+        </div>
+
+        <!-- Matched snippet -->
+        {% if doc.search_snippet %}
+        <div style="font-size: 0.88rem; color: var(--text-secondary); margin: 0.5rem 0; background: var(--bg-subtle); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); font-family: inherit; line-height: 1.4;">
+          {{ doc.search_snippet }}
+        </div>
+        {% endif %}
+
+        <div style="display: flex; gap: 1rem; font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">
+          <span>File: <strong>{{ doc.filename }}</strong></span>
+          <span>•</span>
+          <span>Size: <strong>{{ doc.formatted_size }}</strong></span>
+          <span>•</span>
+          <span>Owner: <strong>{{ doc.owner_name }}</strong></span>
+          {% if doc.page_count %}
+          <span>•</span>
+          <span>Pages: <strong>{{ doc.page_count }}</strong></span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display: flex; gap: 0.4rem; flex-shrink: 0;">
+        <button type="button" class="btn btn-secondary btn-sm" data-preview-doc-id="{{ doc.id }}">
+          <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
+          <span>Preview</span>
+        </button>
+        <a href="{{ url_for('documents.download', doc_id=doc.id) }}" class="btn btn-primary btn-sm">
+          <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+          <span>Download</span>
+        </a>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="glass-card" style="text-align: center; padding: 4rem 2rem;">
+    <div style="width: 64px; height: 64px; border-radius: var(--radius-full); background: var(--bg-subtle); display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); margin-bottom: 1rem;">
+      <i data-lucide="search-x" style="width: 32px; height: 32px;"></i>
+    </div>
+    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.4rem;">No matching documents found</h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem;">Try adjusting your query keywords or clearing filter categories.</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

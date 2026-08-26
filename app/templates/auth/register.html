@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Create an Account - DocuVault{% endblock %}
+
+{% block content %}
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 1rem;">
+  <div class="glass-card" style="width: 100%; max-width: 480px; padding: 2.5rem; box-shadow: var(--shadow-xl);">
+    
+    <!-- Logo & Header -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; color: white; margin-bottom: 1rem; box-shadow: 0 8px 16px var(--primary-glow);">
+        <i data-lucide="user-plus" style="width: 28px; height: 28px;"></i>
+      </div>
+      <h2 style="font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em;">Create Your Account</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.35rem;">Get started with intelligent document management</p>
+    </div>
+
+    <!-- Registration Form -->
+    <form action="{{ url_for('auth.register') }}" method="POST">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <div style="position: relative;">
+          <input type="text" name="full_name" class="form-input" required autofocus style="padding-left: 2.4rem;">
+          <i data-lucide="badge-check" style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted);"></i>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Username *</label>
+          <div style="position: relative;">
+            <input type="text" name="username" class="form-input" required style="padding-left: 2.4rem;">
+            <i data-lucide="user" style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted);"></i>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <div style="position: relative;">
+            <input type="email" name="email" class="form-input" required style="padding-left: 2.4rem;">
+            <i data-lucide="mail" style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted);"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password * (min 6 characters)</label>
+        <div style="position: relative;">
+          <input type="password" name="password" class="form-input" required style="padding-left: 2.4rem;">
+          <i data-lucide="lock" style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted);"></i>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirm Password *</label>
+        <div style="position: relative;">
+          <input type="password" name="confirm_password" class="form-input" required style="padding-left: 2.4rem;">
+          <i data-lucide="check" style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted);"></i>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 0.95rem; margin-top: 0.5rem; margin-bottom: 1.5rem;">
+        <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+        <span>Create Account</span>
+      </button>
+    </form>
+
+    <!-- Footer link -->
+    <div style="text-align: center; font-size: 0.88rem; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 1.25rem;">
+      Already have an account? 
+      <a href="{{ url_for('auth.login') }}" style="color: var(--primary); font-weight: 600; text-decoration: none;">Sign in here</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard & Storage Analytics - DocuVault{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: 2rem;">
+
+  <!-- Welcome Header Banner -->
+  <div class="glass-card" style="padding: 2rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+        <span class="badge badge-primary">Workspace Overview</span>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">{{ user.role|upper }}</span>
+      </div>
+      <h1 style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em;">Welcome back, {{ user.full_name }}! 👋</h1>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.25rem;">Manage your documents, analyze storage distribution, and track team revisions.</p>
+    </div>
+    
+    <div style="display: flex; gap: 0.75rem;">
+      <button type="button" class="btn btn-primary" data-open-modal="uploadModal">
+        <i data-lucide="cloud-upload" style="width: 18px; height: 18px;"></i>
+        <span>Upload Files</span>
+      </button>
+      <button type="button" class="btn btn-secondary" data-open-modal="createFolderModal">
+        <i data-lucide="folder-plus" style="width: 18px; height: 18px;"></i>
+        <span>New Folder</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Key Metrics Stats Cards -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;">
+    
+    <!-- 1. Total Documents -->
+    <div class="glass-card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem;">
+      <div style="width: 52px; height: 52px; border-radius: var(--radius-md); background: rgba(99, 102, 241, 0.12); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+        <i data-lucide="files" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Total Documents</div>
+        <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">{{ total_docs }}</div>
+      </div>
+    </div>
+
+    <!-- 2. Total Folders -->
+    <div class="glass-card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem;">
+      <div style="width: 52px; height: 52px; border-radius: var(--radius-md); background: rgba(59, 130, 246, 0.12); color: #3b82f6; display: flex; align-items: center; justify-content: center;">
+        <i data-lucide="folder" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Active Folders</div>
+        <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">{{ total_folders }}</div>
+      </div>
+    </div>
+
+    <!-- 3. Starred Items -->
+    <div class="glass-card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem;">
+      <div style="width: 52px; height: 52px; border-radius: var(--radius-md); background: rgba(245, 158, 11, 0.12); color: #f59e0b; display: flex; align-items: center; justify-content: center;">
+        <i data-lucide="star" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Starred Files</div>
+        <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">{{ total_starred }}</div>
+      </div>
+    </div>
+
+    <!-- 4. Total Storage Used -->
+    <div class="glass-card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem;">
+      <div style="width: 52px; height: 52px; border-radius: var(--radius-md); background: rgba(16, 185, 129, 0.12); color: #10b981; display: flex; align-items: center; justify-content: center;">
+        <i data-lucide="hard-drive" style="width: 26px; height: 26px;"></i>
+      </div>
+      <div>
+        <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Storage Used</div>
+        <div style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">{{ formatted_total_bytes }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Middle Row: Storage Breakdown & Category Distribution -->
+  <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; align-items: stretch;">
+    
+    <!-- Storage Breakdown Card -->
+    <div class="glass-card" style="padding: 1.75rem; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="pie-chart" style="color: var(--primary);"></i>
+          Storage Distribution
+        </h3>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">{{ user.storage_percentage }}% Quota Used</span>
+      </div>
+
+      <!-- Segmented Master Bar -->
+      <div style="display: flex; height: 12px; width: 100%; border-radius: var(--radius-full); overflow: hidden; background: var(--bg-subtle); margin-bottom: 1.5rem;">
+        {% for cat in breakdown %}
+          {% if cat.percentage > 0 %}
+          <div style="width: {{ cat.percentage }}%; background: {{ cat.color }};" title="{{ cat.category }}: {{ cat.percentage }}%"></div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- Category List -->
+      <div style="display: flex; flex-direction: column; gap: 0.85rem; flex: 1; overflow-y: auto;">
+        {% for cat in breakdown %}
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; padding: 0.35rem 0; border-bottom: 1px solid var(--border-subtle);">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <div style="width: 10px; height: 10px; border-radius: var(--radius-full); background: {{ cat.color }};"></div>
+            <span style="font-weight: 600;">{{ cat.category }}</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">({{ cat.count }} items)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <span style="font-weight: 700;">{{ cat.formatted_size }}</span>
+            <span style="font-size: 0.8rem; color: var(--text-muted); width: 45px; text-align: right;">{{ cat.percentage }}%</span>
+          </div>
+        </div>
+        {% else %}
+        <div style="text-align: center; color: var(--text-muted); padding: 2rem;">No storage data available yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Quick Navigation & Highlights -->
+    <div class="glass-card" style="padding: 1.75rem; display: flex; flex-direction: column;">
+      <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+        <i data-lucide="zap" style="color: #f59e0b;"></i>
+        Quick Shortcuts
+      </h3>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; flex: 1;">
+        <a href="{{ url_for('folders.explorer', category='pdf') }}" class="glass-card" style="padding: 1rem; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; border-color: var(--border-subtle); transition: var(--transition);">
+          <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.12); color: #ef4444; display: flex; align-items: center; justify-content: center;">
+            <i data-lucide="file-text" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div>
+            <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">PDF Documents</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">View all PDF files</div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('folders.explorer', category='image') }}" class="glass-card" style="padding: 1rem; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; border-color: var(--border-subtle); transition: var(--transition);">
+          <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(236, 72, 153, 0.12); color: #ec4899; display: flex; align-items: center; justify-content: center;">
+            <i data-lucide="image" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div>
+            <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">Image Gallery</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Photos, diagrams, media</div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('folders.starred') }}" class="glass-card" style="padding: 1rem; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; border-color: var(--border-subtle); transition: var(--transition);">
+          <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(245, 158, 11, 0.12); color: #f59e0b; display: flex; align-items: center; justify-content: center;">
+            <i data-lucide="star" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div>
+            <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">Starred Items</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Favorites & shortcuts</div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('folders.shared') }}" class="glass-card" style="padding: 1rem; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; border-color: var(--border-subtle); transition: var(--transition);">
+          <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(14, 165, 233, 0.12); color: #0ea5e9; display: flex; align-items: center; justify-content: center;">
+            <i data-lucide="share-2" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div>
+            <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">Shared Links</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">External access management</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Row: Recent Documents & Activity Audit Trail -->
+  <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.5rem; align-items: flex-start;">
+    
+    <!-- Recent Documents Section -->
+    <div class="glass-card" style="padding: 1.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="clock" style="color: var(--primary);"></i>
+          Recently Uploaded Documents
+        </h3>
+        <a href="{{ url_for('folders.explorer') }}" style="font-size: 0.85rem; font-weight: 600; color: var(--primary); text-decoration: none;">View All →</a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+        {% for doc in recent_docs %}
+        <div class="doc-card">
+          <!-- Thumbnail / Preview Click -->
+          <div class="doc-card-preview" data-preview-doc-id="{{ doc.id }}">
+            <i data-lucide="{{ file_icon(doc.file_extension, doc.category) }}" class="preview-icon" style="color: {{ category_color(doc.category) }};"></i>
+            <button type="button" class="doc-star-btn {% if doc.is_starred %}starred{% endif %}" data-doc-id="{{ doc.id }}" title="Star Document">
+              <i data-lucide="star" style="width: 16px; height: 16px; {% if doc.is_starred %}fill: #f59e0b; color: #f59e0b;{% endif %}"></i>
+            </button>
+          </div>
+
+          <div class="doc-card-body">
+            <a href="{{ url_for('documents.details', doc_id=doc.id) }}" class="doc-card-title" title="{{ doc.title }}">{{ doc.title }}</a>
+            <div style="display: flex; gap: 0.35rem; align-items: center;">
+              <span class="badge badge-secondary" style="font-size: 0.7rem;">v{{ doc.current_version }}</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">{{ doc.file_extension|upper }}</span>
+            </div>
+            <div class="doc-card-footer">
+              <span>{{ doc.formatted_size }}</span>
+              <span>{{ time_ago(doc.created_at) }}</span>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 2rem;">
+          No documents uploaded yet. Click "Upload Files" to begin.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Recent Activity Audit Feed -->
+    <div class="glass-card" style="padding: 1.75rem;">
+      <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+        <i data-lucide="activity" style="color: #10b981;"></i>
+        Activity Audit Trail
+      </h3>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        {% for act in recent_activities %}
+        <div style="display: flex; gap: 0.85rem; align-items: flex-start;">
+          <div style="width: 32px; height: 32px; border-radius: var(--radius-full); background: var(--bg-subtle); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.75rem; font-weight: 700; color: var(--primary);">
+            {{ act.user.initials if act.user else 'SYS' }}
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 0.85rem; line-height: 1.4;">
+              <span style="font-weight: 700;">{{ act.user.full_name if act.user else 'System' }}</span>
+              <span class="badge {{ act.action_badge_color }}" style="font-size: 0.68rem; margin: 0 0.3rem;">{{ act.action }}</span>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              {{ act.details }}
+            </div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
+              {{ time_ago(act.created_at) }}
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div style="text-align: center; color: var(--text-muted); padding: 2rem;">No recent activities logged.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

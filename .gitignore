@@ -1,0 +1,38 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# SQLite & Instance DB
+instance/*.db
+instance/*.sqlite
+instance/*.sqlite3
+!instance/.gitkeep
+
+# Storage uploads, thumbnails, and versions
+storage/uploads/*
+!storage/uploads/.gitkeep
+storage/thumbnails/*
+!storage/thumbnails/.gitkeep
+storage/versions/*
+!storage/versions/.gitkeep
+
+# IDEs & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

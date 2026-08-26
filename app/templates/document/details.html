@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block title %}{{ doc.title }} - Document Details - DocuVault{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: 2rem;">
+
+  <!-- Breadcrumbs -->
+  <div class="breadcrumb-nav">
+    <a href="{{ url_for('folders.explorer') }}" class="breadcrumb-item">
+      <i data-lucide="home" style="width: 16px; height: 16px;"></i>
+      <span>Root</span>
+    </a>
+    {% if doc.folder %}
+      {% for crumb in doc.folder.get_breadcrumbs() %}
+        <span class="breadcrumb-separator">/</span>
+        <a href="{{ url_for('folders.explorer', folder_id=crumb.id) }}" class="breadcrumb-item">{{ crumb.name }}</a>
+      {% endfor %}
+    {% endif %}
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-item active">{{ doc.title }}</span>
+  </div>
+
+  <!-- Document Header Banner -->
+  <div class="glass-card" style="padding: 2rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
+    <div style="display: flex; gap: 1.25rem; align-items: flex-start;">
+      <!-- Icon -->
+      <div style="width: 60px; height: 60px; border-radius: var(--radius-md); background: var(--bg-subtle); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;" data-preview-doc-id="{{ doc.id }}" title="Click to Preview">
+        <i data-lucide="{{ file_icon(doc.file_extension, doc.category) }}" style="color: {{ category_color(doc.category) }}; width: 32px; height: 32px;"></i>
+      </div>
+
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+          <h1 style="font-size: 1.7rem; font-weight: 800; letter-spacing: -0.02em;">{{ doc.title }}</h1>
+          <span class="badge badge-primary">Version {{ doc.current_version }}</span>
+          <span class="badge badge-secondary">{{ doc.category|upper }}</span>
+          <button type="button" class="doc-star-btn {% if doc.is_starred %}starred{% endif %}" data-doc-id="{{ doc.id }}" style="position: static; width: 30px; height: 30px;" title="Star">
+            <i data-lucide="star" style="width: 16px; height: 16px; {% if doc.is_starred %}fill: #f59e0b; color: #f59e0b;{% endif %}"></i>
+          </button>
+        </div>
+
+        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.35rem;">
+          {{ doc.description or 'No description provided.' }}
+        </p>
+
+        <div style="display: flex; gap: 0.4rem; margin-top: 0.75rem; flex-wrap: wrap;">
+          {% for tag in doc.tags %}
+          <span class="badge" style="background: rgba(99,102,241,0.12); color: var(--primary); font-size: 0.75rem;">#{{ tag.name }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+      <button type="button" class="btn btn-secondary" data-preview-doc-id="{{ doc.id }}">
+        <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+        <span>Preview</span>
+      </button>
+
+      <a href="{{ url_for('documents.download', doc_id=doc.id) }}" class="btn btn-primary">
+        <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+        <span>Download ({{ doc.formatted_size }})</span>
+      </a>
+
+      <button type="button" class="btn btn-secondary" data-open-modal="shareModal">
+        <i data-lucide="share-2" style="width: 16px; height: 16px;"></i>
+        <span>Share</span>
+      </button>
+
+      <button type="button" class="btn btn-secondary" data-open-modal="newVersionModal">
+        <i data-lucide="upload-cloud" style="width: 16px; height: 16px;"></i>
+        <span>New Version</span>
+      </button>
+
+      <!-- Delete Button -->
+      <form action="{{ url_for('documents.delete', doc_id=doc.id) }}" method="POST" onsubmit="return confirm('Move this document to Trash?');">
+        <button type="submit" class="btn btn-danger" title="Move to Trash">
+          <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Middle Layout: File Metadata & Version Control Timeline -->
+  <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 1.5rem; align-items: flex-start;">
+    
+    <!-- Left Column: Document Metadata & Edit Form -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+      
+      <!-- Metadata Properties Card -->
+      <div class="glass-card" style="padding: 1.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+          <i data-lucide="file-check" style="color: var(--primary);"></i>
+          File Properties & Integrity
+        </h3>
+
+        <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.88rem;">
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.4rem;">
+            <span style="color: var(--text-muted);">Filename:</span>
+            <span style="font-weight: 600;">{{ doc.filename }}</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.4rem;">
+            <span style="color: var(--text-muted);">File Size:</span>
+            <span style="font-weight: 600;">{{ doc.formatted_size }} ({{ doc.file_size }} bytes)</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.4rem;">
+            <span style="color: var(--text-muted);">MIME Type:</span>
+            <span><code>{{ doc.mime_type }}</code></span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.4rem;">
+            <span style="color: var(--text-muted);">Uploader:</span>
+            <span style="font-weight: 600;">{{ doc.owner.full_name }}</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.4rem;">
+            <span style="color: var(--text-muted);">Uploaded At:</span>
+            <span>{{ doc.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.4rem;">
+            <span style="color: var(--text-muted);">Last Modified:</span>
+            <span>{{ time_ago(doc.updated_at) }}</span>
+          </div>
+
+          {% if doc.page_count %}
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.4rem;">
+            <span style="color: var(--text-muted);">Page / Row Count:</span>
+            <span style="font-weight: 600;">{{ doc.page_count }}</span>
+          </div>
+          {% endif %}
+
+          {% if doc.dimensions %}
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.4rem;">
+            <span style="color: var(--text-muted);">Dimensions:</span>
+            <span style="font-weight: 600;">{{ doc.dimensions }} px</span>
+          </div>
+          {% endif %}
+
+          <!-- SHA-256 Checksum -->
+          <div style="margin-top: 0.5rem; background: var(--bg-subtle); padding: 0.75rem; border-radius: var(--radius-sm);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+              <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">SHA-256 INTEGRITY HASH</span>
+              <span class="badge badge-success" style="font-size: 0.65rem;">Verified</span>
+            </div>
+            <code style="font-size: 0.72rem; word-break: break-all; color: var(--text-primary);">
+              {{ doc.checksum_sha256 or 'N/A' }}
+            </code>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Document Metadata Form -->
+      <div class="glass-card" style="padding: 1.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+          <i data-lucide="edit-3" style="color: var(--primary);"></i>
+          Edit Details & Location
+        </h3>
+
+        <form action="{{ url_for('documents.edit', doc_id=doc.id) }}" method="POST">
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input type="text" name="title" value="{{ doc.title }}" class="form-input" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-textarea" rows="3">{{ doc.description or '' }}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Folder Location</label>
+            <select name="folder_id" class="form-select">
+              <option value="">📂 Root Directory</option>
+              {% for f in all_folders %}
+              <option value="{{ f.id }}" {% if doc.folder_id == f.id %}selected{% endif %}>📁 {{ f.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tags (comma separated)</label>
+            <input type="text" name="tags" value="{{ doc.tags|map(attribute='name')|join(', ') }}" class="form-input" placeholder="e.g. finance, 2026, approved">
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm" style="width: 100%;">
+            <i data-lucide="save"></i>
+            <span>Save Metadata</span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Version History Timeline & Comments -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+      
+      <!-- Version History Timeline -->
+      <div class="glass-card" style="padding: 1.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="git-branch" style="color: var(--primary);"></i>
+            Version History ({{ doc.versions.count() }} revisions)
+          </h3>
+          <button type="button" class="btn btn-primary btn-sm" data-open-modal="newVersionModal">
+            <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+            <span>Add Revision</span>
+          </button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem; position: relative;">
+          {% for ver in doc.versions %}
+          <div style="display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; border-radius: var(--radius-md); background: {% if ver.version_number == doc.current_version %}var(--primary-light){% else %}var(--bg-subtle){% endif %}; border: 1px solid {% if ver.version_number == doc.current_version %}var(--primary){% else %}var(--border-subtle){% endif %};">
+            
+            <!-- Version Number Badge -->
+            <div style="width: 36px; height: 36px; border-radius: var(--radius-full); background: {% if ver.version_number == doc.current_version %}var(--primary){% else %}var(--bg-surface){% endif %}; color: {% if ver.version_number == doc.current_version %}white{% else %}var(--text-secondary){% endif %}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">
+              v{{ ver.version_number }}
+            </div>
+
+            <!-- Version Meta -->
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-weight: 700; font-size: 0.95rem;">
+                  {{ ver.change_summary or 'Revision update' }}
+                  {% if ver.version_number == doc.current_version %}
+                  <span class="badge badge-success" style="font-size: 0.65rem; margin-left: 0.4rem;">Current Active</span>
+                  {% endif %}
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">{{ time_ago(ver.created_at) }}</span>
+              </div>
+
+              <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.35rem; display: flex; gap: 0.75rem;">
+                <span>File: <strong>{{ ver.filename }}</strong></span>
+                <span>•</span>
+                <span>Size: <strong>{{ ver.formatted_size }}</strong></span>
+                <span>•</span>
+                <span>By: <strong>{{ ver.uploader.full_name if ver.uploader else 'System' }}</strong></span>
+              </div>
+
+              <!-- Version Actions -->
+              <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                <a href="{{ url_for('documents.download', doc_id=doc.id, version=ver.version_number) }}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+                  <i data-lucide="download" style="width: 12px; height: 12px;"></i>
+                  <span>Download v{{ ver.version_number }}</span>
+                </a>
+
+                {% if ver.version_number != doc.current_version %}
+                <form action="{{ url_for('documents.rollback_version', doc_id=doc.id, version_number=ver.version_number) }}" method="POST" onsubmit="return confirm('Rollback document to Version {{ ver.version_number }}?');">
+                  <button type="submit" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+                    <i data-lucide="rotate-ccw" style="width: 12px; height: 12px; color: #f59e0b;"></i>
+                    <span>Rollback to this</span>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Notes & Team Comments -->
+      <div class="glass-card" style="padding: 1.75rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+          <i data-lucide="message-square" style="color: var(--primary);"></i>
+          Notes & Collaboration ({{ doc.comments.count() }})
+        </h3>
+
+        <!-- Comment Form -->
+        <form action="{{ url_for('documents.add_comment', doc_id=doc.id) }}" method="POST" style="margin-bottom: 1.5rem;">
+          <div class="form-group" style="margin-bottom: 0.6rem;">
+            <textarea name="content" class="form-textarea" rows="2" placeholder="Add a note or comment on this document..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i data-lucide="send" style="width: 14px; height: 14px;"></i>
+            <span>Post Note</span>
+          </button>
+        </form>
+
+        <!-- Comments List -->
+        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+          {% for c in doc.comments %}
+          <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+            <div style="width: 32px; height: 32px; border-radius: var(--radius-full); background: {{ c.author.avatar_color }}; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
+              {{ c.author.initials }}
+            </div>
+            <div style="flex: 1; background: var(--bg-subtle); padding: 0.75rem 1rem; border-radius: var(--radius-md);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                <span style="font-weight: 700; font-size: 0.85rem;">{{ c.author.full_name }}</span>
+                <span style="font-size: 0.72rem; color: var(--text-muted);">{{ time_ago(c.created_at) }}</span>
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">
+                {{ c.content }}
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div style="text-align: center; color: var(--text-muted); padding: 1rem; font-size: 0.85rem;">
+            No notes added yet. Use the box above to write comments or annotations.
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Document Audit Trail -->
+      <div class="glass-card" style="padding: 1.75rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+          <i data-lucide="history" style="color: #10b981;"></i>
+          Document Activity Log
+        </h3>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for log in logs %}
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; padding: 0.35rem 0; border-bottom: 1px solid var(--border-subtle);">
+            <div>
+              <span class="badge {{ log.action_badge_color }}" style="font-size: 0.65rem; margin-right: 0.4rem;">{{ log.action }}</span>
+              <span>{{ log.details }}</span>
+            </div>
+            <span style="color: var(--text-muted); font-size: 0.72rem;">{{ time_ago(log.created_at) }}</span>
+          </div>
+          {% else %}
+          <div style="text-align: center; color: var(--text-muted); padding: 1rem; font-size: 0.85rem;">No activity recorded yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Modal: Upload New Revision -->
+<div class="modal-backdrop" id="newVersionModal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+        <i data-lucide="upload-cloud" style="color: var(--primary);"></i>
+        Upload New Document Revision
+      </h3>
+      <button type="button" class="icon-btn" data-close-modal style="border:none;">
+        <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+    <form action="{{ url_for('documents.new_version', doc_id=doc.id) }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          Uploading a replacement file will create <strong>Version {{ doc.current_version + 1 }}</strong> while preserving all previous revisions.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Select Replacement File *</label>
+          <input type="file" name="file" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Change Summary *</label>
+          <input type="text" name="change_summary" class="form-input" placeholder="e.g. Updated financial tables with Q3 numbers" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Upload Revision</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Generate Share Link -->
+<div class="modal-backdrop" id="shareModal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+        <i data-lucide="share-2" style="color: var(--primary);"></i>
+        Generate Share Link
+      </h3>
+      <button type="button" class="icon-btn" data-close-modal style="border:none;">
+        <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+    <form action="{{ url_for('share.create_share', doc_id=doc.id) }}" method="POST">
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          Create a secure link to allow external users to view or download this document.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Password Protection (Optional)</label>
+          <input type="password" name="password" class="form-input" placeholder="Leave empty for public access">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Link Expiration</label>
+          <select name="expires_in_days" class="form-select">
+            <option value="">Never Expires</option>
+            <option value="1">Expires in 24 Hours</option>
+            <option value="7">Expires in 7 Days</option>
+            <option value="30">Expires in 30 Days</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" name="allow_download" value="1" checked style="accent-color: var(--primary);">
+            <span style="font-size: 0.85rem;">Allow recipients to download the original file</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Generate Share Link</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

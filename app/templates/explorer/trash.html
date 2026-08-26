@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Trash / Recycle Bin - DocuVault{% endblock %}
+
+{% block content %}
+<div>
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <i data-lucide="trash-2" style="color: var(--danger); width: 24px; height: 24px;"></i>
+        <h1 style="font-size: 1.6rem; font-weight: 800;">Recycle Bin</h1>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+        Items in the Trash can be restored or permanently removed.
+      </p>
+    </div>
+
+    {% if deleted_docs or deleted_folders %}
+    <form action="{{ url_for('folders.empty_trash') }}" method="POST" onsubmit="return confirm('WARNING: This will PERMANENTLY delete all files and versions in Trash. This action CANNOT be undone. Are you sure?');">
+      <button type="submit" class="btn btn-danger btn-sm">
+        <i data-lucide="alert-octagon" style="width: 15px; height: 15px;"></i>
+        <span>Empty Trash Permanently</span>
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if deleted_docs or deleted_folders %}
+    <!-- Deleted Folders -->
+    {% if deleted_folders %}
+    <div class="section-title-wrapper">
+      <span class="section-title">Deleted Folders ({{ deleted_folders|length }})</span>
+    </div>
+    <div class="folder-grid" style="margin-bottom: 2rem;">
+      {% for f in deleted_folders %}
+      <div class="folder-card" style="opacity: 0.85;">
+        <div class="folder-icon-wrapper" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">
+          <i data-lucide="folder-x" style="width: 24px; height: 24px;"></i>
+        </div>
+        <div class="folder-info">
+          <div class="folder-name">{{ f.name }}</div>
+          <div class="folder-meta">Deleted {{ time_ago(f.deleted_at) }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Deleted Documents -->
+    {% if deleted_docs %}
+    <div class="section-title-wrapper">
+      <span class="section-title">Deleted Documents ({{ deleted_docs|length }})</span>
+    </div>
+    <div class="doc-table-container">
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th>Document Name</th>
+            <th>Category</th>
+            <th>Size</th>
+            <th>Deleted</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for doc in deleted_docs %}
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i data-lucide="{{ file_icon(doc.file_extension, doc.category) }}" style="color: var(--text-muted); width: 20px; height: 20px;"></i>
+                <div>
+                  <div style="font-weight: 600; color: var(--text-primary);">{{ doc.title }}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">{{ doc.filename }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-secondary">{{ doc.category }}</span>
+            </td>
+            <td style="color: var(--text-secondary); font-size: 0.85rem;">{{ doc.formatted_size }}</td>
+            <td style="color: var(--text-muted); font-size: 0.85rem;">{{ time_ago(doc.deleted_at) }}</td>
+            <td style="text-align: right;">
+              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem;">
+                <!-- Restore -->
+                <form action="{{ url_for('documents.restore', doc_id=doc.id) }}" method="POST">
+                  <button type="submit" class="btn btn-secondary btn-sm" title="Restore Document">
+                    <i data-lucide="rotate-ccw" style="width: 14px; height: 14px; color: var(--success);"></i>
+                    <span>Restore</span>
+                  </button>
+                </form>
+
+                <!-- Permanent Delete -->
+                <form action="{{ url_for('documents.permanent_delete', doc_id=doc.id) }}" method="POST" onsubmit="return confirm('Permanently wipe this document and all versions?');">
+                  <button type="submit" class="btn btn-danger btn-sm" title="Wipe Permanently">
+                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                    <span>Wipe</span>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+  {% else %}
+    <div class="glass-card" style="text-align: center; padding: 4rem 2rem;">
+      <div style="width: 64px; height: 64px; border-radius: var(--radius-full); background: var(--bg-subtle); display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); margin-bottom: 1rem;">
+        <i data-lucide="trash-2" style="width: 32px; height: 32px;"></i>
+      </div>
+      <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.4rem;">Trash is empty</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">No deleted documents or folders found.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Starred Documents - DocuVault{% endblock %}
+
+{% block content %}
+<div>
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <i data-lucide="star" style="color: #f59e0b; width: 24px; height: 24px; fill: #f59e0b;"></i>
+        <h1 style="font-size: 1.6rem; font-weight: 800;">Starred Documents</h1>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+        Quick access to your most important and favorite files.
+      </p>
+    </div>
+  </div>
+
+  {% if documents %}
+  <div class="document-grid">
+    {% for doc in documents %}
+    <div class="doc-card">
+      <button type="button" class="doc-star-btn starred" data-doc-id="{{ doc.id }}" title="Unstar Document">
+        <i data-lucide="star" style="width: 16px; height: 16px; fill: #f59e0b; color: #f59e0b;"></i>
+      </button>
+
+      <div class="doc-card-preview" data-preview-doc-id="{{ doc.id }}">
+        <i data-lucide="{{ file_icon(doc.file_extension, doc.category) }}" class="preview-icon" style="color: {{ category_color(doc.category) }};"></i>
+      </div>
+
+      <div class="doc-card-body">
+        <a href="{{ url_for('documents.details', doc_id=doc.id) }}" class="doc-card-title">{{ doc.title }}</a>
+        <div style="display: flex; gap: 0.35rem; align-items: center;">
+          <span class="badge badge-secondary" style="font-size: 0.7rem;">v{{ doc.current_version }}</span>
+          <span class="badge badge-primary" style="font-size: 0.7rem;">{{ doc.category }}</span>
+        </div>
+        <div class="doc-card-footer">
+          <span>{{ doc.formatted_size }}</span>
+          <div style="display: flex; gap: 0.3rem;">
+            <button type="button" class="icon-btn btn-sm" data-preview-doc-id="{{ doc.id }}" title="Preview">
+              <i data-lucide="eye" style="width: 13px; height: 13px;"></i>
+            </button>
+            <a href="{{ url_for('documents.download', doc_id=doc.id) }}" class="icon-btn btn-sm" title="Download">
+              <i data-lucide="download" style="width: 13px; height: 13px;"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="glass-card" style="text-align: center; padding: 4rem 2rem;">
+    <div style="width: 64px; height: 64px; border-radius: var(--radius-full); background: var(--bg-subtle); display: inline-flex; align-items: center; justify-content: center; color: #f59e0b; margin-bottom: 1rem;">
+      <i data-lucide="star" style="width: 32px; height: 32px;"></i>
+    </div>
+    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.4rem;">No starred documents</h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem;">Click the star icon on any document to add it to your favorites.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
