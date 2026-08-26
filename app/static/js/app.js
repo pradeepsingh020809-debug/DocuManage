@@ -159,7 +159,7 @@ function initShortcuts() {
   });
 }
 
-// Live Interactive Particle Background
+// Live Interactive Red Mathematical Shapes Background (No Web Lines)
 function initLiveBackground() {
   const canvas = document.getElementById('liveParticlesCanvas');
   if (!canvas) return;
@@ -173,7 +173,7 @@ function initLiveBackground() {
     height = canvas.height = window.innerHeight;
   });
 
-  const mouse = { x: null, y: null, maxDist: 140 };
+  const mouse = { x: null, y: null, maxDist: 180 };
 
   window.addEventListener('mousemove', (e) => {
     mouse.x = e.clientX;
@@ -185,10 +185,10 @@ function initLiveBackground() {
     mouse.y = null;
   });
 
-  const particleCount = Math.min(Math.floor((width * height) / 22000), 50);
-  const particles = [];
+  const shapeTypes = ['hexagon', 'triangle', 'concentric', 'cube', 'symbol'];
+  const symbolsList = ['π', 'Σ', '∞', 'Δ', '∫', '√x', 'f(x)', 'θ', 'λ'];
 
-  class Particle {
+  class MathShape {
     constructor() {
       this.reset();
     }
@@ -196,80 +196,139 @@ function initLiveBackground() {
     reset() {
       this.x = Math.random() * width;
       this.y = Math.random() * height;
-      this.vx = (Math.random() - 0.5) * 0.6;
-      this.vy = (Math.random() - 0.5) * 0.6;
-      this.radius = Math.random() * 2.2 + 1;
-      this.alpha = Math.random() * 0.4 + 0.2;
+      this.size = Math.random() * 24 + 14;
+      this.vx = (Math.random() - 0.5) * 0.45;
+      this.vy = (Math.random() - 0.5) * 0.45;
+      this.angle = Math.random() * Math.PI * 2;
+      this.rotSpeed = (Math.random() - 0.5) * 0.015;
+      this.type = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
+      this.symbol = symbolsList[Math.floor(Math.random() * symbolsList.length)];
+      this.alpha = Math.random() * 0.35 + 0.15;
+      this.pulse = Math.random() * Math.PI;
     }
 
     update() {
       this.x += this.vx;
       this.y += this.vy;
+      this.angle += this.rotSpeed;
+      this.pulse += 0.02;
 
-      if (this.x < 0 || this.x > width) this.vx *= -1;
-      if (this.y < 0 || this.y > height) this.vy *= -1;
+      // Wrap edges
+      if (this.x < -40) this.x = width + 40;
+      if (this.x > width + 40) this.x = -40;
+      if (this.y < -40) this.y = height + 40;
+      if (this.y > height + 40) this.y = -40;
+
+      // Mouse repulsion (Smooth physics without drawing any lines)
+      if (mouse.x !== null && mouse.y !== null) {
+        const dx = this.x - mouse.x;
+        const dy = this.y - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < mouse.maxDist && dist > 0) {
+          const force = (mouse.maxDist - dist) / mouse.maxDist;
+          this.x += (dx / dist) * force * 1.5;
+          this.y += (dy / dist) * force * 1.5;
+        }
+      }
     }
 
     draw() {
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fillStyle = isDark
-        ? `rgba(165, 180, 252, ${this.alpha})`
-        : `rgba(99, 102, 241, ${this.alpha * 0.7})`;
-      ctx.fill();
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.angle);
+
+      // Crimson / Ruby Red colors
+      const strokeColor = isDark
+        ? `rgba(248, 113, 113, ${this.alpha * 1.2})`
+        : `rgba(239, 68, 68, ${this.alpha * 0.85})`;
+      const fillColor = isDark
+        ? `rgba(225, 29, 72, ${this.alpha * 0.25})`
+        : `rgba(254, 226, 226, ${this.alpha * 0.3})`;
+
+      ctx.strokeStyle = strokeColor;
+      ctx.fillStyle = fillColor;
+      ctx.lineWidth = 1.4;
+
+      if (this.type === 'hexagon') {
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (i * Math.PI) / 3;
+          const px = this.size * Math.cos(a);
+          const py = this.size * Math.sin(a);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+      } else if (this.type === 'triangle') {
+        ctx.beginPath();
+        for (let i = 0; i < 3; i++) {
+          const a = (i * 2 * Math.PI) / 3 - Math.PI / 2;
+          const px = this.size * Math.cos(a);
+          const py = this.size * Math.sin(a);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+      } else if (this.type === 'concentric') {
+        const pulseR = this.size + Math.sin(this.pulse) * 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, pulseR, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, 0, pulseR * 0.55, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (this.type === 'cube') {
+        // Isometric 3D Wireframe Cube
+        const s = this.size * 0.7;
+        ctx.beginPath();
+        // Top diamond
+        ctx.moveTo(0, -s);
+        ctx.lineTo(s * 0.86, -s * 0.5);
+        ctx.lineTo(0, 0);
+        ctx.lineTo(-s * 0.86, -s * 0.5);
+        ctx.closePath();
+        ctx.stroke();
+
+        // Downward vertical edges
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.86, -s * 0.5);
+        ctx.lineTo(-s * 0.86, s * 0.5);
+        ctx.lineTo(0, s);
+        ctx.lineTo(s * 0.86, s * 0.5);
+        ctx.lineTo(s * 0.86, -s * 0.5);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, s);
+        ctx.stroke();
+      } else if (this.type === 'symbol') {
+        ctx.font = `${Math.round(this.size * 1.1)}px 'Plus Jakarta Sans', monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = strokeColor;
+        ctx.fillText(this.symbol, 0, 0);
+      }
+
+      ctx.restore();
     }
   }
 
-  for (let i = 0; i < particleCount; i++) {
-    particles.push(new Particle());
+  const shapeCount = Math.min(Math.floor((width * height) / 28000), 38);
+  const shapes = [];
+
+  for (let i = 0; i < shapeCount; i++) {
+    shapes.push(new MathShape());
   }
 
   function animate() {
     ctx.clearRect(0, 0, width, height);
 
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const lineColor = isDark ? '99, 102, 241' : '129, 140, 248';
-
-    for (let i = 0; i < particles.length; i++) {
-      const p1 = particles[i];
-      p1.update();
-      p1.draw();
-
-      // Connect nearby particles
-      for (let j = i + 1; j < particles.length; j++) {
-        const p2 = particles[j];
-        const dx = p1.x - p2.x;
-        const dy = p1.y - p2.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < 110) {
-          const alpha = (1 - dist / 110) * (isDark ? 0.22 : 0.12);
-          ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.strokeStyle = `rgba(${lineColor}, ${alpha})`;
-          ctx.lineWidth = 0.8;
-          ctx.stroke();
-        }
-      }
-
-      // Connect to mouse cursor
-      if (mouse.x !== null && mouse.y !== null) {
-        const mdx = p1.x - mouse.x;
-        const mdy = p1.y - mouse.y;
-        const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
-
-        if (mdist < mouse.maxDist) {
-          const malpha = (1 - mdist / mouse.maxDist) * 0.45;
-          ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(mouse.x, mouse.y);
-          ctx.strokeStyle = `rgba(168, 85, 247, ${malpha})`;
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-        }
-      }
+    for (let i = 0; i < shapes.length; i++) {
+      shapes[i].update();
+      shapes[i].draw();
     }
 
     requestAnimationFrame(animate);
@@ -277,4 +336,5 @@ function initLiveBackground() {
 
   animate();
 }
+
 
